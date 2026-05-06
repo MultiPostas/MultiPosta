@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiPosta Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">MULTIPOSTA</div>
+    </header>
+    <main>
+        <section class="hero">
+            <h1>MultiPosta Pro</h1>
+            <p>Configura tus postas, equipos y rotaciones fácilmente.</p>
+        </section>
+        <section class="configurador">
+            <div class="card">
+                <div class="grid-inputs">
+                    <div class="input-group" style="grid-column: span 2; background: #fff5ed; padding: 10px; border-radius: 8px; border: 1px dashed #FF6600;">
+                        <label style="color: #FF6600;">¿Cuántos equipos por posta?</label>
+                        <input type="number" id="equiposPorPosta" value="2">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Nº Total de Equipos</label>
+                        <input type="number" id="equipos" value="4" oninput="crearCamposNombres()">
+                    </div>
+                    <div class="input-group"><label>Nº de Postas</label><input type="number" id="postas" value="2"></div>
+                    
+                    <div class="input-group"><label>Tiempo de cada posta (min)</label><input type="number" id="tiempoPostaManual" value="15"></div>
+                    <div class="input-group"><label>Tiempo de rotación entre postas (min)</label><input type="number" id="descanso" value="5"></div>
+                    
+                    <div class="input-group"><label>Hora Inicio</label><input type="time" id="horaInicio" value="09:00"></div>
+                    <div class="input-group"><label>Repeticiones del circuito</label><input type="number" id="repeticiones" value="1"></div>
+
+                    <div class="input-group" style="grid-column: span 2; background: #e8f5e9; padding: 15px; border-radius: 8px;">
+                        <label><strong>☕ ¿Habrá descanso para desayuno?</strong></label>
+                        <select id="hayDesayuno" onchange="toggleDesayuno()">
+                            <option value="no">No</option>
+                            <option value="si">Sí</option>
+                        </select>
+                        <div id="tiemposDesayuno" style="display:none; margin-top:10px; gap: 10px;">
+                            <div><label>Inicio Desayuno</label><input type="time" id="desayunoInicio" value="10:30"></div>
+                            <div><label>Fin Desayuno</label><input type="time" id="desayunoFin" value="11:00"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top:25px; color: #003366;">Nombres de los Equipos</h3>
+                <div id="contenedorNombres" class="nombres-grid"></div>
+                
+                <button onclick="generarCalendario()" class="btn-primary">Generar Horario Maestro</button>
+            </div>
+        </section>
+        <div id="resultado" class="resultado-container"></div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
+<div id="detallesPostas" class="resultado-container"></div>

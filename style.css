@@ -1,0 +1,37 @@
+:root { --primary: #003366; --accent: #FF6600; }
+body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding-bottom: 50px; }
+header { background: white; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+.logo { font-weight: bold; color: var(--primary); font-size: 24px; letter-spacing: 2px; }
+.hero { background: var(--primary); color: white; text-align: center; padding: 40px 20px; }
+.card { background: white; padding: 20px; max-width: 800px; margin: -30px auto 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.input-group label { display: block; margin-bottom: 5px; font-size: 0.9em; font-weight: bold; }
+.input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+.btn-primary { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; font-size: 1.1em; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; margin-top:20px;}
+.nombres-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; }
+.resultado-container { max-width: 900px; margin: 20px auto; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: white; }
+th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+th { background: var(--primary); color: white; }
+tr:nth-child(even) { background: #f9f9f9; }
+@media print { .hero, .configurador, header { display: none; } }
+.posta-card {
+    background: white;
+    border-left: 5px solid var(--primary);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.posta-card h3 { margin: 0 0 10px 0; color: var(--primary); }
+.posta-card input, .posta-card textarea {
+    width: 100%;
+    margin-top: 5px;
+    padding: 8px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    font-family: inherit;
+}
+@media print {
+    .posta-card { page-break-inside: avoid; border: 1px solid #ccc; }
+}
