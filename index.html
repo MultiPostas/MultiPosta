@@ -1,205 +1,121 @@
-function toggleDesayuno() {
-    const selector = document.getElementById('hayDesayuno').value;
-    document.getElementById('tiemposDesayuno').style.display = (selector === 'si') ? 'flex' : 'none';
-}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-function calcularMinutos(hora) {
-    let [h, m] = hora.split(':').map(Number);
-    return h * 60 + m;
-}
+<header>
+    <div class="logo">MULTIPOSTA</div>
+    <nav>
+        <a href="javascript:void(0)" onclick="mostrarModalPRO()" class="pro-link">⭐ Activar Funciones PRO</a>
+    </nav>
+</header>
 
-function crearCamposNombres() {
-    const num = parseInt(document.getElementById('equipos').value);
-    const container = document.getElementById('contenedorNombres');
-    container.innerHTML = "";
-    if (num > 0) {
-        for (let i = 1; i <= num; i++) {
-            let div = document.createElement('div');
-            div.style.display = "flex";
-            div.style.flexDirection = "column";
-            div.innerHTML = `<label style="font-size:0.7em">Nombre Eq. ${i}</label>
-                             <input type="text" id="name_${i-1}" placeholder="Equipo ${i}" style="padding:5px; border-radius:4px; border:1px solid #ccc;">`;
-            container.appendChild(div);
-        }
-    }
-}
+<main>
+    <section class="hero">
+        <h1>MultiPosta Pro</h1>
+        <p>Configura tus postas, equipos y rotaciones fácilmente.</p>
+    </section>
 
-// Ejecutar al cargar la página para que aparezcan los primeros 4 equipos
-window.onload = crearCamposNombres;
+    <section class="configurador">
+        <div class="card">
+            <div class="consejo-web">
+                <h4>💡 Guía rápida de organización</h4>
+                <p id="alertaRecomendacion">Introduce los datos para recibir una recomendación.</p>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="number" id="numNinos" placeholder="Nº de niños totales" oninput="recomendarGrupos()">
+                    <input type="email" id="emailUsuario" placeholder="Tu email para continuar" style="flex: 2;">
+                </div>
+            </div>
 
-function generarCalendario() {
-    const porPosta = parseInt(document.getElementById('equiposPorPosta').value);
-    const numEquipos = parseInt(document.getElementById('equipos').value);
-    const numPostas = parseInt(document.getElementById('postas').value);
-    const tJuego = parseInt(document.getElementById('tiempoPostaManual').value);
-    const tRotacion = parseInt(document.getElementById('descanso').value);
-    const horaInicioStr = document.getElementById('horaInicio').value;
-    const repeticiones = parseInt(document.getElementById('repeticiones').value);
+            <div class="grid-inputs">
+                <div class="input-group">
+                    <label>Metodología</label>
+                    <select id="metodologia" onchange="ajustarMetodologia()">
+                        <option value="rotacion">Rotación Estándar</option>
+                        <option value="grandprix">Grand Prix (Parejas)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Tipo de Competición</label>
+                    <select id="tipoCompeticion">
+                        <option value="puntos">Por Puntos (Liga)</option>
+                        <option value="eliminatorias">Eliminatorias (PRO)</option>
+                    </select>
+                </div>
+                <div class="input-group"><label>Nº Total de Equipos</label><input type="number" id="equipos" value="4" oninput="crearCamposNombres()"></div>
+                <div class="input-group"><label>Nº de Postas</label><input type="number" id="postas" value="2" oninput="crearCamposPostas()"></div>
+                <div class="input-group"><label>Equipos por Posta</label><input type="number" id="equiposPorPosta" value="2"></div>
+                <div class="input-group"><label>Tiempo Posta (min)</label><input type="number" id="tiempoPosta" value="15"></div>
+                <div class="input-group"><label>Descanso (min)</label><input type="number" id="tiempoRotacion" value="5"></div>
+                <div class="input-group"><label>Repeticiones Circuito</label><input type="number" id="repeticiones" value="1"></div>
+                <div class="input-group"><label>Hora Inicio</label><input type="time" id="horaInicio" value="09:00"></div>
+
+                <div class="input-group" style="grid-column: span 2; background: #e8f5e9; padding: 15px; border-radius: 8px;">
+                    <label><strong>☕ ¿Habrá descanso para desayuno?</strong></label>
+                    <select id="hayDesayuno" onchange="toggleDesayuno()">
+                        <option value="no">No</option>
+                        <option value="si">Sí</option>
+                    </select>
+                    <div id="tiemposDesayuno" style="display:none; margin-top:10px;">
+                        <label>Duración (min)</label>
+                        <input type="number" id="duracionDesayuno" value="30">
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-top:25px; color: #003366;">Nombres de los Equipos</h3>
+            <div id="contenedorNombres" class="nombres-grid"></div>
+
+            <h3 style="margin-top:25px; color: #003366;">Detalles de las Actividades</h3>
+            <div id="detallesPostas"></div>
+            
+            <button onclick="validarYGenerar()" class="btn-primary" style="margin-top: 30px;">Generar Horario Maestro</button>
+        </div>
+    </section>
+
+    <div id="resultado" class="resultado-container" style="display:none;"></div>
     
-    const tieneDesayuno = document.getElementById('hayDesayuno').value === 'si';
-    const desInicio = tieneDesayuno ? calcularMinutos(document.getElementById('desayunoInicio').value) : 0;
-    const desFin = tieneDesayuno ? calcularMinutos(document.getElementById('desayunoFin').value) : 0;
+    <div id="btnDescargar" style="display:none; text-align: center; margin-bottom: 40px; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        <button onclick="descargarPDF()" class="btn-pdf" style="padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">📥 Planificación General</button>
+        <button onclick="descargarPDFPorEquipos()" class="btn-primary" style="background-color: var(--accent); padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; color: white;">⭐ Descargar PDF por Equipos (PRO)</button>
+    </div>
 
-    let nombres = [];
-    for (let i = 0; i < numEquipos; i++) {
-        let input = document.getElementById(`name_${i}`);
-        nombres.push((input && input.value) ? input.value : `Eq. ${i+1}`);
-    }
+    <section class="soporte-container">
+        <div class="card card-dudas">
+            <h2>¿Tienes alguna duda?</h2>
+            <p>Déjanos tu pregunta en nuestro buzón y te contestaremos en un plazo máximo de 24 horas.</p>
+            <a href="https://forms.gle/k8wACd772UPwhLbR7" target="_blank" class="btn-primary link-boton">Abrir Buzón de Preguntas</a>
+        </div>
+    </section>
+</main>
 
-    let tiempoActualMins = calcularMinutos(horaInicioStr);
-    let rondasTotales = Math.max(numPostas, Math.ceil(numEquipos / porPosta)) * repeticiones;
+<div id="modalPlanPro" class="modal" style="display: none;">
+    <div class="card card-modal">
+        <span id="botonCerrar" class="cerrar-ventana" style="cursor: pointer; float: right; font-size: 28px; font-weight: bold; color: #aaa;">&times;</span> 
+        
+        <h2 style="color: var(--primary);">⭐ MultiPosta <span style="color: var(--accent);">PRO</span></h2>
+        <p>Desbloquea todas las ventajas para tus eventos profesionales:</p>
+        
+        <ul class="lista-pro">
+            <li>✅ <strong>PDF Personalizado por Equipo:</strong> Genera hojas de ruta individuales con horarios, rivales y materiales para cada grupo.</li>
+            <li>✅ <strong>+100</strong> Dinámicas y Juegos exclusivos.</li>
+            <li>✅ <strong>Cuadrícula</strong> de Clasificaciones automática.</li>
+            <li>✅ <strong>Asistencia Personal</strong> para tus dudas.</li>
+            <li>✅ Modo <strong>Eliminatorias</strong> y Cuadros finales.</li>
+        </ul>
+        
+       <div class="contacto-pro" style="margin-bottom: 20px; text-align: center;">
+            <p><strong>¿No tienes tu código todavía?</strong></p>
+            <p style="font-size: 0.9em; color: #666; margin-top: -5px; margin-bottom: 15px;">Envía tu solicitud. Revisaremos los datos manualmente y te lo enviaremos por email en menos de 24h.</p>
+            
+            <a href="https://forms.gle/e6a4pptdiofrWFjW7" target="_blank" class="btn-formulario-pro">
+                📋 Solicitar Código PRO
+            </a>
+        </div>
 
-    let html = `<h2>Horario de Competición</h2>`;
-    html += "<table><tr><th>Ronda</th><th>Horario</th>";
-    for(let i=1; i<=numPostas; i++) html += `<th>Posta ${i}</th>`;
-    html += "</tr>";
-
-    let desayunoPasado = false;
-
-    for (let r = 0; r < rondasTotales; r++) {
-        // Verificar si la siguiente ronda entra en el desayuno
-        if (tieneDesayuno && !desayunoPasado && (tiempoActualMins + tJuego) > desInicio) {
-            html += `<tr style="background:#e8f5e9; font-weight:bold;"><td colspan="${numPostas+2}">☕ DESCANSO DESAYUNO</td></tr>`;
-            tiempoActualMins = desFin;
-            desayunoPasado = true;
-        }
-
-        let h = Math.floor(tiempoActualMins/60).toString().padStart(2,'0');
-        let m = (tiempoActualMins%60).toString().padStart(2,'0');
-        let finMins = tiempoActualMins + tJuego;
-        let hF = Math.floor(finMins/60).toString().padStart(2,'0');
-        let mF = (finMins%60).toString().padStart(2,'0');
-
-        html += `<tr><td>${r+1}</td><td style="white-space:nowrap">${h}:${m} - ${hF}:${mF}</td>`;
-        for (let p = 0; p < numPostas; p++) {
-            let eqEnPosta = [];
-            for (let e = 0; e < porPosta; e++) {
-                let id = (p * porPosta + e + r) % numEquipos;
-                eqEnPosta.push(nombres[id]);
-            }
-            html += `<td>${eqEnPosta.join(' <br>vs<br> ')}</td>`;
-        }
-        html += "</tr>";
-        tiempoActualMins = finMins + tRotacion;
-    }
-    document.getElementById('resultado').innerHTML = html + "</table>";
-}
-function generarCalendario() {
-    const porPosta = parseInt(document.getElementById('equiposPorPosta').value);
-    const numEquipos = parseInt(document.getElementById('equipos').value);
-    const numPostas = parseInt(document.getElementById('postas').value);
-    const tJuego = parseInt(document.getElementById('tiempoPostaManual').value);
-    const tRotacion = parseInt(document.getElementById('descanso').value);
-    const horaInicioStr = document.getElementById('horaInicio').value;
-    const repeticiones = parseInt(document.getElementById('repeticiones').value);
-    
-    const tieneDesayuno = document.getElementById('hayDesayuno').value === 'si';
-    const desInicio = tieneDesayuno ? calcularMinutos(document.getElementById('desayunoInicio').value) : 0;
-    const desFin = tieneDesayuno ? calcularMinutos(document.getElementById('desayunoFin').value) : 0;
-
-    let nombres = [];
-    for (let i = 0; i < numEquipos; i++) {
-        let input = document.getElementById(`name_${i}`);
-        nombres.push((input && input.value) ? input.value : `Eq. ${i+1}`);
-    }
-
-    let tiempoActualMins = calcularMinutos(horaInicioStr);
-    let rondasTotales = Math.max(numPostas, Math.ceil(numEquipos / porPosta)) * repeticiones;
-
-    // --- GENERAR TABLA DE HORARIOS ---
-    let html = `<h2>Horario de Competición</h2>`;
-    html += "<table><tr><th>Ronda</th><th>Horario</th>";
-    for(let i=1; i<=numPostas; i++) html += `<th>Posta ${i}</th>`;
-    html += "</tr>";
-
-    let desayunoPasado = false;
-    for (let r = 0; r < rondasTotales; r++) {
-        if (tieneDesayuno && !desayunoPasado && (tiempoActualMins + tJuego) > desInicio) {
-            html += `<tr style="background:#e8f5e9; font-weight:bold;"><td colspan="${numPostas+2}">☕ DESCANSO DESAYUNO</td></tr>`;
-            tiempoActualMins = desFin;
-            desayunoPasado = true;
-        }
-
-        let h = Math.floor(tiempoActualMins/60).toString().padStart(2,'0');
-        let m = (tiempoActualMins%60).toString().padStart(2,'0');
-        let finMins = tiempoActualMins + tJuego;
-        let hF = Math.floor(finMins/60).toString().padStart(2,'0');
-        let mF = (finMins%60).toString().padStart(2,'0');
-
-        html += `<tr><td>${r+1}</td><td style="white-space:nowrap">${h}:${m} - ${hF}:${mF}</td>`;
-        for (let p = 0; p < numPostas; p++) {
-            let eqEnPosta = [];
-            for (let e = 0; e < porPosta; e++) {
-                let id = (p * porPosta + e + r) % numEquipos;
-                eqEnPosta.push(nombres[id]);
-            }
-            html += `<td>${eqEnPosta.join(' <br>vs<br> ')}</td>`;
-        }
-        html += "</tr>";
-        tiempoActualMins = finMins + tRotacion;
-    }
-    document.getElementById('resultado').innerHTML = html + "</table>";
-
-    // --- GENERAR CUADRANTES DE ACTIVIDAD Y MATERIAL ---
-    let htmlDetalles = `<h2>Detalles de las Postas</h2><div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">`;
-    for(let i=1; i<=numPostas; i++) {
-        htmlDetalles += `
-            <div class="posta-card">
-                <h3>Posta ${i}</h3>
-                <label>Nombre de la Actividad:</label>
-                <input type="text" placeholder="Ej: Carrera de sacos">
-                <label>Material necesario:</label>
-                <textarea rows="2" placeholder="Ej: 4 sacos, conos, silbato"></textarea>
-            </div>`;
-    }
-    htmlDetalles += `</div>`;
-    document.getElementById('detallesPostas').innerHTML = htmlDetalles;
-}
-async function descargarPDF() {
-    const { jsPDF } = window.jspdf;
-
-    // Selecciona el contenido que quieres exportar
-    const contenido = document.getElementById("resultado");
-
-    if (!contenido || contenido.innerHTML.trim() === "") {
-        alert("Primero genera el horario antes de descargar el PDF.");
-        return;
-    }
-
-    // Captura como imagen
-    const canvas = await html2canvas(contenido, {
-        scale: 2
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF('p', 'mm', 'a4');
-
-    const imgWidth = 210; // ancho A4
-    const pageHeight = 297;
-    const imgHeight = canvas.height * imgWidth / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    // Si el contenido ocupa varias páginas
-    while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-    }
-
-    pdf.save("Horario_MultiPosta.pdf");
-}
-const contenido = document.getElementById("pdfContent");
-const titulo = document.createElement("h1");
-titulo.innerText = "MultiPosta Pro - Informe de Actividad";
-titulo.style.textAlign = "center";
-
-contenido.prepend(titulo);
-
-pdf.addImage(logoBase64, 'PNG', 10, 10, 40, 15);
+        <div class="input-group">
+            <input type="text" id="inputCodigoPro" placeholder="Introduce tu código asignado" style="text-align: center; border: 2px solid var(--accent); margin-bottom: 10px;">
+            <button onclick="verificarCodigo()" class="btn-primary">Activar Ahora</button>
+        </div>
+        <button onclick="cerrarModalPRO()" class="btn-volver" style="margin-top: 10px;">Volver</button>
+    </div>
+</div>
